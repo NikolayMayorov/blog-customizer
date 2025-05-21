@@ -1,7 +1,7 @@
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 import styles from './ArticleParamsForm.module.scss';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, memo } from 'react';
 import stylesArrowButton from 'src/ui/arrow-button/ArrowButton.module.scss';
 import { Select } from 'src/ui/select';
 import {
@@ -16,12 +16,27 @@ import {
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
 
-export const ArticleParamsForm = () => {
+type ArticleParamsFormProps = {
+	onChange: (params: ArticleParams) => void;
+};
+
+export interface ArticleParams {
+	fontFamilyOption: OptionType;
+	fontColor: OptionType;
+	backgroundColor: OptionType;
+	contentWidth: OptionType;
+	fontSizeOption: OptionType;
+}
+
+export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
 	const [isOpen, setIsOpen] = useState(false);
-	// const [paramOptions, setParamOptions] = useState<OptionType[]>([
-	// 	defaultArticleState.fontFamilyOption,
-	// 	defaultArticleState.fontSizeOption,
-	// ]);
+	const [params, setParams] = useState<ArticleParams>({
+		fontFamilyOption: defaultArticleState.fontFamilyOption,
+		fontColor: defaultArticleState.fontColor,
+		backgroundColor: defaultArticleState.backgroundColor,
+		contentWidth: defaultArticleState.contentWidth,
+		fontSizeOption: defaultArticleState.fontSizeOption,
+	});
 
 	useEffect(() => {
 		function handleClickOutside(evt: MouseEvent) {
@@ -40,33 +55,66 @@ export const ArticleParamsForm = () => {
 		};
 	}, []);
 
-	function handleChangeFont(option: OptionType) {
-		console.log('Selected font:', option);
-	}
+	const handleChangeOption = useCallback(
+		(nameOption: string, option: OptionType) => {
+			setParams((prevState) => ({
+				...prevState,
+				[nameOption]: option,
+			}));
+		},
+		[]
+	);
 
-	function handleChangeFontSize(option: OptionType) {
-		console.log('Selected font size:', option);
-	}
+	const handleChangeFont = useCallback((option: OptionType) => {
+		handleChangeOption('fontFamilyOption', option);
+	}, []);
 
-	function handleChangeFontColor(option: OptionType) {
-		console.log('Selected font color:', option);
-	}
+	const handleChangeFontSize = useCallback((option: OptionType) => {
+		handleChangeOption('fontSizeOption', option);
+	}, []);
 
-	function handleChangeBackgroundColor(option: OptionType) {
-		console.log('Selected background color:', option);
-	}
+	const handleChangeFontColor = useCallback((option: OptionType) => {
+		handleChangeOption('fontColor', option);
+	}, []);
 
-	function handleChangeContentWidth(option: OptionType) {
-		console.log('Selected content width:', option);
-	}
+	const handleChangeBackgroundColor = useCallback((option: OptionType) => {
+		handleChangeOption('backgroundColor', option);
+	}, []);
 
-	function toggleIsOpen() {
-		setIsOpen((prev) => !prev);
-	}
+	const handleChangeContentWidth = useCallback((option: OptionType) => {
+		handleChangeOption('contentWidth', option);
+	}, []);
+
 	const handlerArrowClick = function () {
-		toggleIsOpen();
+		setIsOpen((prev) => !prev);
 	};
 
+	const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
+		evt.preventDefault();
+		console.log('params', params);
+		onChange(params);
+	};
+
+	const handleReset = () => {
+		console.log('params', params);
+		setParams({
+			fontFamilyOption: defaultArticleState.fontFamilyOption,
+			fontColor: defaultArticleState.fontColor,
+			backgroundColor: defaultArticleState.backgroundColor,
+			contentWidth: defaultArticleState.contentWidth,
+			fontSizeOption: defaultArticleState.fontSizeOption,
+		});
+		onChange({
+			fontFamilyOption: defaultArticleState.fontFamilyOption,
+			fontColor: defaultArticleState.fontColor,
+			backgroundColor: defaultArticleState.backgroundColor,
+			contentWidth: defaultArticleState.contentWidth,
+			fontSizeOption: defaultArticleState.fontSizeOption,
+		});
+	};
+
+	const MemoizedSelect = memo(Select);
+	const MemoizedRadio = memo(RadioGroup);
 	return (
 		<>
 			<ArrowButton
@@ -77,21 +125,21 @@ export const ArticleParamsForm = () => {
 			/>
 			<aside
 				className={`${styles.container} ${isOpen && styles.container_open}`}>
-				<form className={styles.form}>
-					<Select
+				<form className={styles.form} onSubmit={handleSubmit}>
+					<MemoizedSelect
 						title='шрифт'
 						options={fontFamilyOptions}
-						selected={defaultArticleState.fontFamilyOption}
+						selected={params.fontFamilyOption}
 						onChange={handleChangeFont}
 					/>
 					<br />
 					<br />
 					<br />
 					<br />
-					<RadioGroup
+					<MemoizedRadio
 						title='размер шрифта'
 						options={fontSizeOptions}
-						selected={defaultArticleState.fontSizeOption}
+						selected={params.fontSizeOption}
 						name='font-size-option'
 						onChange={handleChangeFontSize}
 					/>
@@ -99,10 +147,10 @@ export const ArticleParamsForm = () => {
 					<br />
 					<br />
 					<br />
-					<Select
+					<MemoizedSelect
 						title='цвет шрифта'
 						options={fontColors}
-						selected={defaultArticleState.fontColor}
+						selected={params.fontColor}
 						onChange={handleChangeFontColor}
 					/>
 					<br />
@@ -114,26 +162,31 @@ export const ArticleParamsForm = () => {
 					<br />
 					<br />
 					<br />
-					<Select
+					<MemoizedSelect
 						title='цвет фона'
 						options={backgroundColors}
-						selected={defaultArticleState.backgroundColor}
+						selected={params.backgroundColor}
 						onChange={handleChangeBackgroundColor}
 					/>
 					<br />
 					<br />
 					<br />
 					<br />
-					<Select
+					<MemoizedSelect
 						title='ширина контента'
 						options={contentWidthArr}
-						selected={defaultArticleState.contentWidth}
+						selected={params.contentWidth}
 						onChange={handleChangeContentWidth}
 					/>
 					<br />
 					<br />
 					<div className={styles.bottomContainer}>
-						<Button title='Сбросить' htmlType='reset' type='clear' />
+						<Button
+							title='Сбросить'
+							htmlType='reset'
+							type='clear'
+							onClick={handleReset}
+						/>
 						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
