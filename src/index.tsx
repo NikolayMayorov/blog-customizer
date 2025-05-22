@@ -19,7 +19,6 @@ const App = () => {
 	const refMain = useRef<HTMLElement | null>(null);
 
 	const handleChangeOption = (params: ArticleParams) => {
-		console.log('index.tsx params', params);
 		if (refMain.current) {
 			refMain.current.style.setProperty(
 				'--font-family',

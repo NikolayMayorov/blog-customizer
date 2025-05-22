@@ -1,7 +1,7 @@
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 import styles from './ArticleParamsForm.module.scss';
-import { useCallback, useEffect, useState, memo } from 'react';
+import { useCallback, useEffect, useState, memo, useRef } from 'react';
 import stylesArrowButton from 'src/ui/arrow-button/ArrowButton.module.scss';
 import { Select } from 'src/ui/select';
 import {
@@ -38,22 +38,23 @@ export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
 		fontSizeOption: defaultArticleState.fontSizeOption,
 	});
 
+	const refOptionArea = useRef<HTMLElement | null>(null);
+
 	useEffect(() => {
 		function handleClickOutside(evt: MouseEvent) {
 			const target = evt.target as HTMLElement;
-			if (
-				!target.closest(`.${styles.container_open}`) &&
-				!target.closest(`.${stylesArrowButton.container_open}`)
-			) {
-				//TOFIX: setIsOpen(false);
-				//	setIsOpen(false);
+			if (target.closest(`.${stylesArrowButton.container}`)) {
+				return;
+			}
+			if (!target.closest(`.${styles.container_open}`)) {
+				setIsOpen(false);
 			}
 		}
-		window.addEventListener('click', handleClickOutside);
+		window.addEventListener('mousedown', handleClickOutside);
 		return () => {
-			window.removeEventListener('click', handleClickOutside);
+			window.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, []);
+	}, [isOpen]);
 
 	const handleChangeOption = useCallback(
 		(nameOption: string, option: OptionType) => {
@@ -91,12 +92,10 @@ export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
 
 	const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
-		console.log('params', params);
 		onChange(params);
 	};
 
 	const handleReset = () => {
-		console.log('params', params);
 		setParams({
 			fontFamilyOption: defaultArticleState.fontFamilyOption,
 			fontColor: defaultArticleState.fontColor,
@@ -124,6 +123,7 @@ export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
 				}}
 			/>
 			<aside
+				ref={refOptionArea}
 				className={`${styles.container} ${isOpen && styles.container_open}`}>
 				<form className={styles.form} onSubmit={handleSubmit}>
 					<MemoizedSelect
