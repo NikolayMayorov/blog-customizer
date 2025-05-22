@@ -29,7 +29,7 @@ export interface ArticleParams {
 }
 
 export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [params, setParams] = useState<ArticleParams>({
 		fontFamilyOption: defaultArticleState.fontFamilyOption,
 		fontColor: defaultArticleState.fontColor,
@@ -47,14 +47,15 @@ export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
 				return;
 			}
 			if (!target.closest(`.${styles.container_open}`)) {
-				setIsOpen(false);
+				setIsMenuOpen(false);
 			}
 		}
+		if (!isMenuOpen) return;
 		window.addEventListener('mousedown', handleClickOutside);
 		return () => {
 			window.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isOpen]);
+	}, [isMenuOpen]);
 
 	const handleChangeOption = useCallback(
 		(nameOption: string, option: OptionType) => {
@@ -87,7 +88,7 @@ export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
 	}, []);
 
 	const handlerArrowClick = function () {
-		setIsOpen((prev) => !prev);
+		setIsMenuOpen((prev) => !prev);
 	};
 
 	const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
@@ -117,14 +118,16 @@ export const ArticleParamsForm = ({ onChange }: ArticleParamsFormProps) => {
 	return (
 		<>
 			<ArrowButton
-				isOpen={isOpen}
+				isOpen={isMenuOpen}
 				onClick={() => {
 					handlerArrowClick();
 				}}
 			/>
 			<aside
 				ref={refOptionArea}
-				className={`${styles.container} ${isOpen && styles.container_open}`}>
+				className={`${styles.container} ${
+					isMenuOpen && styles.container_open
+				}`}>
 				<form className={styles.form} onSubmit={handleSubmit}>
 					<MemoizedSelect
 						title='шрифт'
